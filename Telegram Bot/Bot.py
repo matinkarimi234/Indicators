@@ -18,18 +18,20 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    global df
-    df = pd.DataFrame()
+
     await update.message.reply_text("Wait to receive Data...")
-    df, df_order_book = fpy.Get_MarketWatch()
 
     """Sends a message with three inline buttons attached."""
     keyboard = [
         [
             InlineKeyboardButton("1 تثبیت روند صعودی", callback_data="ascending1"),
             InlineKeyboardButton("چکش", callback_data="hammer"),
+            InlineKeyboardButton("روند صعودی 2", callback_data="ascending2")
         ],
-        [InlineKeyboardButton("روند صعودی 2", callback_data="ascending2")],
+        [
+            InlineKeyboardButton("روند صعودی 1 و چکش", callback_data="hammer_ascend1"),
+            InlineKeyboardButton("مقایسه سقف با سال 1399", callback_data="compare_99")
+        ],
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -49,7 +51,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await query.answer()
     response = ''
     if query.data == "ascending1":
-        dft = ascending1(df)
+        dft = ascending1()
         for i in list(dft.index.values):
             response += '--\t'+str(i)+'\t-- \n'
         await query.edit_message_text('\n نتیجه فیلتر صعودی یک' + response)
@@ -57,7 +59,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
     elif query.data == 'hammer':
-        dft = hammer(df)
+        dft = hammer()
         for i in list(dft.index.values):
             response += '--\t'+str(i)+'\t-- \n'
         await query.edit_message_text('\n نتیجه فیلتر چکش'+ response)
@@ -65,10 +67,25 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
     elif query.data == "ascending2":
-        dft = ascending2(df)
+        dft = ascending2()
         for i in list(dft.index.values):
             response += '--\t'+str(i)+'\t-- \n'
         await query.edit_message_text('\n نتیجه فیلتر صعودی دو' + response)
+
+        
+
+    elif query.data == "hammer_ascend1":
+        dft = ascending2()
+        for i in list(dft.index.values):
+            response += '--\t'+str(i)+'\t-- \n'
+        await query.edit_message_text('\n نتیجه فیلتر صعودی 1 و چکش' + response)
+
+
+    elif query.data == "compare_99":
+        result = Compare_To_99()
+        for i in list(result):
+            response += '--\t'+str(i)+'\t-- \n'
+        await query.edit_message_text('\n نتیجه فیلتر مقایسه سقف با 99' + response)
 
 
 
