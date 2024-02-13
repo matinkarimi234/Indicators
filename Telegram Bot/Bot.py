@@ -52,7 +52,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             InlineKeyboardButton("ایچیموکو کف و 99", callback_data="ichi_99")
         ],
         [
-            InlineKeyboardButton("کف 3 ماهه و آستانه خرید", callback_data="Buy_Min")
+            InlineKeyboardButton("کف 3 ماهه و آستانه خرید", callback_data="Min_Buy")
+        ],
+        [
+            InlineKeyboardButton("کف 3 ماهه و حجم", callback_data="Min_Base")
         ],
     ]
 
@@ -148,11 +151,17 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             photos.append(InputMediaPhoto(open(data_folder / file.strip()), 'rb'))
         
         await context.bot.send_media_group(chat_id=update.effective_chat.id, media=photos)
-    elif query.data == "Buy_Min":
+    elif query.data == "Min_Buy":
         dft = Min_Buy()
         for i in dft['Ticker'].tolist():
             response += '--\t'+str(i)+'\t-- \n'
         await query.edit_message_text('\n نتیجه کف 3 ماهه و فیلتر آستانه خرید' + response)
+
+    elif query.data == "Min_Base":
+        dft = Min_Base()
+        for i in dft['Ticker'].tolist():
+            response += '--\t'+str(i)+'\t-- \n'
+        await query.edit_message_text('\n نتیجه کف 3 ماهه و حجم' + response)
 
 
 def main() -> None:

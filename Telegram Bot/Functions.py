@@ -369,4 +369,58 @@ def Min_Buy():
             except Exception as error:
                 pass
             count+=1
+
+        dft.to_csv(filename)
     return dft
+
+def Base_Volume(dft = GetMarketWatch()):
+    bv = np.int64(dft['Base-Vol'])
+    volume = np.int64(dft['Volume'])
+
+    dft = dft.loc[ volume >= (bv * 3) ]
+
+    return dft
+
+def Min_Base():
+    today = jd.date.today().strftime("%Y-%m-%d")
+    filename = 'Month-Base-'+ today + '.csv'
+
+    # Miladi Numpy
+    today_M = np.datetime64(datetime.now())
+    today_M10 = np.datetime64(datetime.now() - timedelta(days=10))
+    
+    dft = pd.DataFrame()
+    if os.path.isfile(filename):
+        dft = pd.read_csv(filename)
+    else:
+        Base = Base_Volume()
+        count = 0
+        for index, row in Base.iterrows():
+            name = row['Ticker']
+            print(str(count) + '/'+str(len(Base)))
+            try:
+                minimum = Min_Last_Month(name)
+                date = minimum['Date'][0]
+                if today_M10 <= date <= today_M:
+                    dft = pd.concat([dft,minimum], ignore_index = True)
+                    print('OK!')
+            except Exception as error:
+                print(error)
+            count+=1
+
+        dft.to_csv(filename)
+
+    return dft
+
+
+
+# def Base_Buy():
+#     Base = Min_Base()
+#     Buy = Min_Buy()
+#     Base_names = np.array(Base['Ticker'])
+#     Buy_names = np.array(Buy['Ticker'])
+#     names = list(set(Base_names) & set(Buy_names))
+#     return names
+
+
+# print(Base_Buy())
