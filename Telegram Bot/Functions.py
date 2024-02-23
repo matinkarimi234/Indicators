@@ -416,6 +416,7 @@ def Min_Base():
 
 # def Base_Buy():
 #     Base = Min_Base()
+
 #     Buy = Min_Buy()
 #     Base_names = np.array(Base['Ticker'])
 #     Buy_names = np.array(Buy['Ticker'])
@@ -424,3 +425,37 @@ def Min_Base():
 
 
 # print(Base_Buy())
+
+
+def Get_Index(start,end = jd.date.today().strftime("%Y-%m-%d")):
+    data = pd.DataFrame()
+    data = fpy.Get_CWI_History( start_date = start,
+                                end_date = end,
+                                ignore_date = False,
+                                just_adj_close = True,
+                                show_weekday = False,
+                                double_date = False)
+    return data
+
+def Beta(name):
+    start = (jd.date.today() - timedelta(days=365)).strftime("%Y-%m-%d")
+    df_Stock = Get_Each_Data(name,start)
+    df_Index = Get_Index(start)
+
+    df_Stock = df_Stock['Adj Close']
+    df_Index = df_Index['Adj Close']
+    dft = pd.concat([df_Stock,df_Index.rename('I_Close')], axis = 1)
+
+    returns = np.log(dft / dft.shift(1))
+    
+    #CoVariances
+    cov = returns.cov()*250
+    cov_market = cov.iloc[0,1]
+
+    #Variansces
+    market_var = returns['I_Close'].var()*250
+
+    #Beta
+    return (cov_market / market_var)
+
+print(Beta('فارس'))
