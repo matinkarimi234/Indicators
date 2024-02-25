@@ -445,6 +445,7 @@ def Beta(name):
     df_Stock = df_Stock['Adj Close']
     df_Index = df_Index['Adj Close']
     dft = pd.concat([df_Stock,df_Index.rename('I_Close')], axis = 1)
+    dft.dropna(inplace = True)
 
     returns = np.log(dft / dft.shift(1))
     
@@ -458,4 +459,32 @@ def Beta(name):
     #Beta
     return (cov_market / market_var)
 
-print(Beta('فارس'))
+def Get_All_Beta():
+    today = jd.date.today().strftime("%Y-%m")
+    filename = 'Beta-'+ today + '.csv'
+    df = pd.DataFrame()
+
+    if os.path.isfile(filename):
+        df = pd.read_csv(filename)
+
+    else:
+        names = np.array(pd.read_csv('Tickers.csv')['Ticker'])
+        df = pd.DataFrame(columns = ['Ticker','Beta'])
+        counter = 0
+        
+        for name in names:
+            try:
+                beta = Beta(name)
+                df.loc[counter] = [name] + [beta]
+            except Exception as e:
+                print(e)
+            finally:
+                print(str(counter)+' / '+ str(len(names)))
+                counter +=1
+
+
+        df.dropna(inplace= True)
+        df = df.sort_values(by=['Beta'], ascending=False)
+        df.to_csv(filename)
+
+    return df
