@@ -6,6 +6,7 @@ import jdatetime as jd
 import finpy_tse as fpy
 import mplfinance as mpf
 import uuid
+import scipy.stats as stats
 
 binance_dark = {
     "base_mpl_style": "dark_background",
@@ -453,7 +454,7 @@ def Beta(name):
     cov = returns.cov()*250
     cov_market = cov.iloc[0,1]
 
-    #Variansces
+    #Variances
     market_var = returns['I_Close'].var()*250
 
     #Beta
@@ -471,7 +472,7 @@ def Get_All_Beta():
         names = np.array(pd.read_csv('Tickers.csv')['Ticker'])
         df = pd.DataFrame(columns = ['Ticker','Beta'])
         counter = 0
-        
+
         for name in names:
             try:
                 beta = Beta(name)
@@ -485,6 +486,62 @@ def Get_All_Beta():
 
         df.dropna(inplace= True)
         df = df.sort_values(by=['Beta'], ascending=False)
+        df.to_csv(filename)
+
+    return df
+
+
+def Get_Dollar(start,end = jd.date.today().strftime("%Y-%m-%d")):
+    usd = fpy.Get_USD_RIAL(start_date = start,
+                       end_date = end,
+                       double_date = True,)
+    return usd
+
+#Pearsonn Correlation
+def Corr(usd = pd.DataFrame(),stock = pd.DataFrame()):
+    #Find the common dates in 2 dataframes
+    usd, stock = usd.align(stock, join='inner', axis=0)
+    
+    usd_price = np.array(usd['Close'])
+    stock_price = np.array(stock['Adj Close'])
+    
+    #kendalltau
+    corr, _ = stats.pearsonr(usd_price,stock_price)
+    
+    return corr
+
+def Get_All_Corr():
+    today = jd.date.today().strftime("%Y-%m")
+    filename = 'Corr-'+ today + '.csv'
+    df = pd.DataFrame()
+    
+
+    if os.path.isfile(filename):
+        df = pd.read_csv(filename)
+
+    else:
+        start = (jd.date.today() - timedelta(days=1095)).strftime("%Y-%m-%d")
+        names = np.array(pd.read_csv('Tickers.csv')['Ticker'])
+        df = pd.DataFrame(columns = ['Ticker','Corr'])
+        usd = Get_Dollar(start)
+        counter = 0
+
+        for name in names:
+            try:
+                
+                stock = Get_Each_Data(name,start)
+                corr = Corr(usd,stock)
+                df.loc[counter] = [name] + [corr]
+            except Exception as e:
+                print(e)
+            finally:
+                print(str(counter)+' / '+ str(len(names)))
+                counter +=1
+
+
+        df.dropna(inplace= True)
+        df = df.sort_values(by=['Corr'], ascending=False)
+        df.set_index('Ticker', drop=False)
         df.to_csv(filename)
 
     return df
